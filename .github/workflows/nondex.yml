@@ -1,0 +1,31 @@
+name: NonDex Flaky Test Check
+
+on:
+  workflow_dispatch:
+
+jobs:
+  nondex:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 11
+
+      - name: Build dependencies
+        run: mvn clean install -DskipTests -pl modules/swagger-core -am
+
+      - name: Run test normally
+        run: |
+          mvn -pl modules/swagger-core test \
+          -Dtest=io.swagger.v3.core.resolving.InlineResolvingTest#testInlineResolving
+
+      - name: Run NonDex
+        run: |
+          mvn -pl modules/swagger-core \
+          edu.illinois:nondex-maven-plugin:2.1.1:nondex \
+          -Dtest=io.swagger.v3.core.resolving.InlineResolvingTest#testInlineResolving \
+          -DnondexRuns=20
